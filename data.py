@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import sklearn as sk
 import collections
+
 def read_data(train_path,val_path,test_path, preprocess=True, save=False, series_length=7):
 	"""
 	Read in train, val and test data sets. If preprocess == True then the
@@ -29,6 +30,7 @@ def read_train_data(path, series_length):
 	"""
 	train = pd.read_csv(path)
 	train = preprocess(train, series_length)
+	return train
 
 def read_val_data(path, series_length):
 	"""
@@ -36,6 +38,7 @@ def read_val_data(path, series_length):
 	"""
 	val = pd.read_csv(path)
 	val = preprocess(val, series_length)
+	return val
 
 def read_test_data(path, series_length):
 	"""
@@ -43,6 +46,7 @@ def read_test_data(path, series_length):
 	"""
 	test = pd.read_csv(path)
 	test = preprocess(test, series_length)
+	return test
 
 def preprocess(df, series_length=7):
 	"""
@@ -99,3 +103,7 @@ def round_scores(df):
 	to the nearest integer to be used as a label.
 	"""
 	return df.score.round()
+
+
+def get_series(df):
+	pass

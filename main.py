@@ -16,7 +16,7 @@ def main(args):
 	val_path = args.val_path if args.val_path else 'data/validation.csv'
 	test_path = args.test_path if args.test_path else 'data/test.csv'
 	print('Reading data')
-	read_data.read_data(train_path,val_path,test_path, preprocess, save, series_length)
+	data.read_data(train_path,val_path,test_path, preprocess, save, series_length)
 
 
 if __name__ == '__main__':

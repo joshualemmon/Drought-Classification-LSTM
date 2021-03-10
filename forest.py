@@ -8,3 +8,4 @@ def get_random_forest(n_trees=100, criterion="gini", max_depth=None):
 
 def get_time_series_forest(n_trees=100, criterion="gini", max_depth=None):
 	tsf = pyts.classification.TimeSeriesForest(n_trees, criterion, max_depth)
+	
