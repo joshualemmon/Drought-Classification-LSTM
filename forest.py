@@ -1,17 +1,17 @@
-from sklearn import ensemble
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
-import pyts
+from pyts.classification import TimeSeriesForest
 import pandas as pd
 import data
 import matplotlib.pyplot as plt
 
 def init_random_forest(n_trees=100, criterion="gini", max_depth=None):
-	rf = ensemble.RandomForestClassifier(n_trees, criterion, max_depth)
+	rf = RandomForestClassifier(n_trees, criterion, max_depth)
 	return rf
 
 def init_time_series_forest(n_trees=100, criterion="gini", max_depth=None):
-	tsf = pyts.classification.TimeSeriesForest(n_estimators=n_trees, criterion=criterion, max_depth=max_depth)
+	tsf = TimeSeriesForest(n_estimators=n_trees, criterion=criterion, max_depth=max_depth)
 	return tsf
 
 def train_random_forest(rf, train, val, balanced=False):

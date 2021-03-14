@@ -33,7 +33,7 @@ def main(args):
 	if make_time_series_forest:
 		tsf = forest.init_time_series_forest()
 	if make_lstm:
-		lstm = lstm.init_lstm(device=device)
+		lstm_model = lstm.init_lstm(device=device)
 	if balance:
 		print('Balancing training data')
 		train_x, train_y = data.balance_data(train)
@@ -45,7 +45,7 @@ def main(args):
 			tsf = forest.train_time_series_forest(tsf, [train_x, train_y], val, True)
 		if make_lstm:
 			print('Training LSTM')
-			lstm, lstm_val, lstm_loss = lstm.train_lstm(lstm, [train_x, train_y], val, device, balanced=True)
+			lstm_model, lstm_val, lstm_loss = lstm.train_lstm(lstm_model, [train_x, train_y], val, device, balanced=True)
 	else:
 		if make_rand_forest:
 			print('Training Random Forest')
@@ -66,7 +66,7 @@ def main(args):
 		tsf_avg_acc, tsf_avg_prec, tsf_avg_recall, tsf_avg_f1 = forest.calculate_average_metrics(tsf_acc, tsf_pref, tsf_recall, tsf_f1)
 		print('TSF: ', tsf_avg_acc, tsf_avg_prec, tsf_avg_recall, tsf_avg_f1)
 	if make_lstm:
-		lstm_metrics = lstm.test_lstm(lstm, test, device)
+		lstm_metrics = lstm.test_lstm(lstm_model, test, device)
 		data.plot_lstm_values(lstm_val, lstm_loss)
 		print('LSTM: ', lstm_metrics)
 

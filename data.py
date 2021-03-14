@@ -118,9 +118,9 @@ def balance_data(df, rand_state=None, series_length=7):
 	feature_length = df.shape[1]-1
 	features = get_series(df)
 	# t1 = time()
-	# x, y = sampler.fit_resample(features, labels.array)
+	x, y = sampler.fit_resample(features, labels.array)
 	# print(f'time: {time()-t1}')
-	# x = unflatten_series(x, series_length)
+	x = unflatten_series(x, series_length)
 	# print(collections.Counter(y))
 
 	# return x, y
