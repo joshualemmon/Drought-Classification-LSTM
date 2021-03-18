@@ -2,3 +2,4 @@ data/
 models/
 images/
 __pycache__/
+test_out*.txt

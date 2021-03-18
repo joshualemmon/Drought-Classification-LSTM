@@ -3,7 +3,6 @@ import numpy as np
 import sklearn as sk
 import collections
 from imblearn.combine import SMOTEENN
-import seaborn as sns
 
 def read_data(train_path,val_path,test_path, preprocess=False, save=False, series_length=7):
 	"""
@@ -117,14 +116,15 @@ def balance_data(df, rand_state=None, series_length=7):
 	print(labels.value_counts())
 	feature_length = df.shape[1]-1
 	features = get_series(df)
+	features = flatten_series(features, series_length)
 	# t1 = time()
 	x, y = sampler.fit_resample(features, labels.array)
 	# print(f'time: {time()-t1}')
 	x = unflatten_series(x, series_length)
-	# print(collections.Counter(y))
+	print(collections.Counter(y))
 
-	# return x, y
-	return features, labels
+	return x, y
+	# return features, labels
 
 def get_series(df):
 	"""
@@ -135,9 +135,20 @@ def get_series(df):
 	df = df.set_index(['series'])
 	for s in series_list:
 		f = df.loc[s].values.tolist()
-		features.append([i for s in f for i in s])
+		features.append(f)
 
 	return features
+
+def flatten_series(x, series_length):
+	flattened = []
+
+	for s in x:
+		print(s)
+		flattened.append([i for v in s for i in v ])
+		print(flattened[-1])
+
+	return flattened
+
 
 def unflatten_series(x, feature_length):
 	"""
@@ -158,7 +169,7 @@ def calculate_class_metrics(cm, classes=[0,1,2,3,4,5]):
 	Calculate metrics for each class in data set.
 	"""
 	acc, prec, recall,f1 = [], [],[],[]
-	c = np.array(cm)
+	cm = np.array(cm)
 	for c in classes:
 		tp = cm[c][c]
 		fp = 0
@@ -171,14 +182,14 @@ def calculate_class_metrics(cm, classes=[0,1,2,3,4,5]):
 				if i != c and j != c:
 					tn += cm[i][j]
 		fn = 0
-		for i, v in cm[:,c]:
+		for i, v in enumerate(cm.T[c]):
 			if i != c:
 				fn += v
 
-		acc.append((tp+tn)/(tp+tn+fp+fn))
-		prec.append(tp/(tp+fp))
-		recall.append(tp/(tp+fn))
-		f1.append(2*(prec[-1]*recall[-1])/(prec[-1]+recall[-1]))
+		acc.append(((tp+tn)/(tp+tn+fp+fn)) if (tp+tn+fp+fn) > 0 else 0)
+		prec.append((tp/(tp+fp)) if (tp+fp) > 0 else 0)
+		recall.append((tp/(tp+fn)) if (tp + fn) > 0 else 0 )
+		f1.append((2*(prec[-1]*recall[-1])/(prec[-1]+recall[-1])) if (prec[-1]+recall[-1]) > 0 else 0)
 
 	return acc, prec, recall, f1
 
@@ -192,53 +203,4 @@ def calculate_average_metrics(acc, prec,recall, f1):
 	avg_f1 = np.mean(f1)
 
 	return avg_acc, avg_prec, avg_recall, avg_f1
-
-def plot_lstm_values(val_metrics, loss):
-	sns.set_theme()
-	val_metrics = np.array(val_metrics)
-
-	val_acc = val_metrics[:,0]
-	val_prec = val_metrics[:,1]
-	val_recall = val_metrics[:,2]
-	val_f1 = val_metrics[:,3]
-
-	fig = plt.figure()
-	plt.plot(val_acc)
-	plt.title('LSTM Validation Accuracy')
-	plt.x_label('Epochs')
-	plt.y_label('Accuracy')
-	plt.savefig('images/validation_acc_plot_lstm.png', bbox_inches='tight')
-	fig.clf()
-
-	fig = plt.figure()
-	plt.plot(val_prec)
-	plt.title('LSTM Validation Precision')
-	plt.y_label('Precision')
-	plt.x_label('Epochs')
-	plt.savefig('images/validation_prec_plot_lstm.png', bbox_inches='tight')
-	fig.clf()
-
-
-	fig = plt.figure()
-	plt.plot(val_recall)
-	plt.title('LSTM Validation Recall')
-	plt.y_label('Recall')
-	plt.x_label('Epochs')
-	plt.savefig('images/validation_recall_plot_lstm.png', bbox_inches='tight')
-	fig.clf()
-
-	fig = plt.figure()
-	plt.plot(val_f1)
-	plt.title('LSTM Validation F1 Score')
-	plt.y_label('F1 Score')
-	plt.x_label('Epochs')
-	plt.savefig('images/validation_f1_plot_lstm.png', bbox_inches='tight')
-	fig.clf()
-
-	fig = plt.figure()
-	plt.plot(loss)
-	plt.title('LSTM Training Loss')
-	plt.x_label('Epoch')
-	plt.y_label('Loss')
-	plt.savefig('images/loss_plot_lstm.png', bbox_inches='tight')
 

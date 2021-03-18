@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import data
-import lstm
+import lstm as lstm_model
 import forest
 import sklearn as sk
 import torch
@@ -28,12 +28,13 @@ def main(args):
 	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	print('Reading data')
 	train, val, test = data.read_data(train_path,val_path,test_path, preprocess, save, series_length)
+	print(val.head())
 	if make_rand_forest:
 		rf = forest.init_random_forest()
 	if make_time_series_forest:
 		tsf = forest.init_time_series_forest()
 	if make_lstm:
-		lstm_model = lstm.init_lstm(device=device)
+		lstm = lstm_model.init_lstm(device=device)
 	if balance:
 		print('Balancing training data')
 		train_x, train_y = data.balance_data(train)
@@ -45,7 +46,7 @@ def main(args):
 			tsf = forest.train_time_series_forest(tsf, [train_x, train_y], val, True)
 		if make_lstm:
 			print('Training LSTM')
-			lstm_model, lstm_val, lstm_loss = lstm.train_lstm(lstm_model, [train_x, train_y], val, device, balanced=True)
+			lstm, lstm_val, lstm_loss = lstm_model.train_lstm(lstm, zip(train_x, train_y), val, device, balanced=True)
 	else:
 		if make_rand_forest:
 			print('Training Random Forest')
@@ -55,7 +56,7 @@ def main(args):
 			tsf = forest.train_time_series_forest(tsf, train, val)
 		if make_lstm:
 			print('Training LSTM')
-			lstm, lstm_val, lstm_loss = lstm.train_lstm(lstm, train, val, device)
+			lstm, lstm_val, lstm_loss = lstm_model.train_lstm(lstm, train, val, device)
 
 	if make_rand_forest:
 		rf_acc, rf_prec, rf_recall, rf_f1 = forest.test_random_forest(rf, test)
@@ -63,11 +64,11 @@ def main(args):
 		print('RF: ',rf_avg_acc, rf_avg_prec, rf_avg_recall, rf_avg_f1)
 	if make_time_series_forest:
 		tsf_acc, tsf_pref, tsf_recall, tsf_f1 = forest.test_time_series_forest(tsf, test)
-		tsf_avg_acc, tsf_avg_prec, tsf_avg_recall, tsf_avg_f1 = forest.calculate_average_metrics(tsf_acc, tsf_pref, tsf_recall, tsf_f1)
+		tsf_avg_acc, tsf_avg_prec, tsf_avg_recall, tsf_avg_f1 = data.calculate_average_metrics(tsf_acc, tsf_pref, tsf_recall, tsf_f1)
 		print('TSF: ', tsf_avg_acc, tsf_avg_prec, tsf_avg_recall, tsf_avg_f1)
 	if make_lstm:
-		lstm_metrics = lstm.test_lstm(lstm_model, test, device)
-		data.plot_lstm_values(lstm_val, lstm_loss)
+		lstm_metrics = lstm_model.test_lstm(lstm, test, device)
+		lstm_model.plot_lstm_values(lstm_val, lstm_loss)
 		print('LSTM: ', lstm_metrics)
 
 
