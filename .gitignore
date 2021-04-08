@@ -2,4 +2,6 @@ data/
 models/
 images/
 __pycache__/
-test_out*.txt
+*.txt
+images2/
+images3/

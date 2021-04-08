@@ -28,7 +28,7 @@ def main(args):
 	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	print('Reading data')
 	train, val, test = data.read_data(train_path,val_path,test_path, preprocess, save, series_length)
-	print(val.head())
+	
 	if make_rand_forest:
 		rf = forest.init_random_forest()
 	if make_time_series_forest:
@@ -40,35 +40,38 @@ def main(args):
 		train_x, train_y = data.balance_data(train)
 		if make_rand_forest:
 			print('Training Random Forest')
-			rf = forest.train_random_forest(rf, [train_x, train_y], val, True)
+			rf = forest.train_random_forest(rf, [train_x, train_y], val.copy(True), True)
 		if make_time_series_forest:
 			print('Training Time Series Forest')
-			tsf = forest.train_time_series_forest(tsf, [train_x, train_y], val, True)
+			tsf = forest.train_time_series_forest(tsf, [train_x, train_y], val.copy(True), True)
 		if make_lstm:
 			print('Training LSTM')
-			lstm, lstm_val, lstm_loss = lstm_model.train_lstm(lstm, zip(train_x, train_y), val, device, balanced=True)
+			lstm, lstm_val, lstm_loss = lstm_model.train_lstm(lstm, [train_x, train_y], val, device, balanced=True)
 	else:
 		if make_rand_forest:
 			print('Training Random Forest')
-			rf = forest.train_random_forest(rf, train, val)
+			rf = forest.train_random_forest(rf, train.copy(True), val.copy(True))
 		if make_time_series_forest:
 			print('Training Time Series Forest')
-			tsf = forest.train_time_series_forest(tsf, train, val)
+			tsf = forest.train_time_series_forest(tsf, train.copy(True), val.copy(True))
 		if make_lstm:
 			print('Training LSTM')
 			lstm, lstm_val, lstm_loss = lstm_model.train_lstm(lstm, train, val, device)
 
 	if make_rand_forest:
-		rf_acc, rf_prec, rf_recall, rf_f1 = forest.test_random_forest(rf, test)
+		print('Testing Random Forest')
+		rf_acc, rf_prec, rf_recall, rf_f1 = forest.test_random_forest(rf, test.copy(True), balanced=balance)
 		rf_avg_acc, rf_avg_prec, rf_avg_recall, rf_avg_f1 = data.calculate_average_metrics(rf_acc, rf_prec, rf_recall, rf_f1)
 		print('RF: ',rf_avg_acc, rf_avg_prec, rf_avg_recall, rf_avg_f1)
 	if make_time_series_forest:
-		tsf_acc, tsf_pref, tsf_recall, tsf_f1 = forest.test_time_series_forest(tsf, test)
+		print('Testing Time Series Forest')
+		tsf_acc, tsf_pref, tsf_recall, tsf_f1 = forest.test_time_series_forest(tsf, test.copy(True), balanced=balance)
 		tsf_avg_acc, tsf_avg_prec, tsf_avg_recall, tsf_avg_f1 = data.calculate_average_metrics(tsf_acc, tsf_pref, tsf_recall, tsf_f1)
 		print('TSF: ', tsf_avg_acc, tsf_avg_prec, tsf_avg_recall, tsf_avg_f1)
 	if make_lstm:
-		lstm_metrics = lstm_model.test_lstm(lstm, test, device)
-		lstm_model.plot_lstm_values(lstm_val, lstm_loss)
+		print('Testing LSTM')
+		lstm_metrics = lstm_model.test_lstm(lstm, test, device, seq=False, balanced=balance)
+		lstm_model.plot_lstm_values(lstm_val, lstm_loss, bal=balance)
 		print('LSTM: ', lstm_metrics)
 
 

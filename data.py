@@ -3,6 +3,7 @@ import numpy as np
 import sklearn as sk
 import collections
 from imblearn.combine import SMOTEENN
+import random
 
 def read_data(train_path,val_path,test_path, preprocess=False, save=False, series_length=7):
 	"""
@@ -111,20 +112,27 @@ def balance_data(df, rand_state=None, series_length=7):
 	Classes with high frequency will be under-sampled and classes with
 	low frequency will be over-sampled.
 	"""
-	sampler = SMOTEENN(sampling_strategy='all', random_state=rand_state)
-	labels = df.pop('score').dropna()
-	print(labels.value_counts())
-	feature_length = df.shape[1]-1
+	# sampler = SMOTEENN(sampling_strategy='all', random_state=rand_state, n_jobs=12)
+	labels = df.pop('score').dropna().astype(int)
+	min_count = labels.value_counts().min()
+	labels = labels.tolist()
+	# feature_length = df.shape[1]-1
 	features = get_series(df)
-	features = flatten_series(features, series_length)
-	# t1 = time()
-	x, y = sampler.fit_resample(features, labels.array)
-	# print(f'time: {time()-t1}')
-	x = unflatten_series(x, series_length)
-	print(collections.Counter(y))
+	
+	zipped = zip(features, labels)
+	separated_list = [[] for i in range(6)]
+	for f, l in zipped:
+		separated_list[l].append([f,l])
+
+	balanced_train = []
+	for sl in separated_list:
+		temp = [x for x in random.sample(sl, min_count)]
+		for t in temp:
+			balanced_train.append(t)
+
+	x, y = zip(*balanced_train)
 
 	return x, y
-	# return features, labels
 
 def get_series(df):
 	"""

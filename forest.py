@@ -33,24 +33,24 @@ def train_random_forest(rf, train, val, balanced=False):
 	rf.fit(train, labels)
 	print('Random Forest Trained')
 
-	val_acc, val_prec, val_recall, val_f1 = test_random_forest(rf, val, True)
+	val_acc, val_prec, val_recall, val_f1 = test_random_forest(rf, val, True, balanced)
 	print(f"Random Forest Trained\nVal Acc. {val_acc}\nVal Prec. {val_prec}\nVal Recall {val_recall}\nVal F1 {val_f1}")
 	return rf
 
 def train_time_series_forest(tsf, train, val, balanced=False):
 	if balanced:
 		labels = train[1]
-		train = compute_windowvals(train[0])
+		train = compute_window_vals(train[0])
 	else:
 		labels = train.pop('score').dropna().astype(int)
 		train = compute_window_vals(data.get_series(train))
 	tsf.fit(train, labels)
 	print('Time Series Forest Trained')
-	val_acc, val_prec, val_recall, val_f1 = test_time_series_forest(tsf, val, True)
+	val_acc, val_prec, val_recall, val_f1 = test_time_series_forest(tsf, val.copy(True), True, balanced)
 	print(f"Time Series Forest Trained\nVal Acc. {val_acc}\nVal Prec. {val_prec}\nVal Recall {val_recall}\nVal F1 {val_f1}")
 	return tsf
 
-def test_random_forest(rf, test, val=False):
+def test_random_forest(rf, test, val=False, balanced=False):
 	"""
 	Test the trained random forest model and return calculated metrics.
 	"""
@@ -66,16 +66,20 @@ def test_random_forest(rf, test, val=False):
 	cm = confusion_matrix(labels, preds, labels=[0,1,2,3,4,5])
 	disp = ConfusionMatrixDisplay(cm, display_labels=['None', 'D0', 'D1', 'D2', 'D3', 'D4'])
 	disp.plot()
+	name = 'images/random_forest_cm'
 	if val:
-		plt.savefig('images/random_forest_cm_val.png', bbox_inches='tight')
+		name += '_val'
 	else:
-		plt.savefig('images/random_forest_cm_test.png', bbox_inches='tight')
+		name += '_test'
+	if balanced:
+		name+='_bal'
+	plt.savefig(name+'.png', bbox_inches='tight')
 	acc, prec, recall, f1 = data.calculate_class_metrics(cm)
 
 
 	return acc, prec, recall, f1
 
-def test_time_series_forest(tsf, test, val=False):
+def test_time_series_forest(tsf, test, val=False, balanced=False):
 	labels = test.pop('score').dropna().tolist()
 	test_series = compute_window_vals(data.get_series(test))
 	preds = tsf.predict(test_series)
@@ -83,10 +87,14 @@ def test_time_series_forest(tsf, test, val=False):
 	fig = plt.figure()
 	disp = ConfusionMatrixDisplay(cm, display_labels=['None', 'D0', 'D1', 'D2', 'D3', 'D4'])
 	disp.plot()
+	name = 'images/time_series_forest_cm'
 	if val:
-		plt.savefig('images/time_series_forest_cm_val.png', bbox_inches='tight')
+		name += '_val'
 	else:
-		plt.savefig('images/time_series_forest_cm_test.png', bbox_inches='tight')
+		name += '_test'
+	if balanced:
+		name+='_bal'
+	plt.savefig(name+'.png', bbox_inches='tight')
 	acc, prec, recall, f1 = data.calculate_class_metrics(cm)
 
 	return acc, prec, recall, f1
